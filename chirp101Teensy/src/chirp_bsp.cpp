@@ -56,6 +56,10 @@ void chbsp_board_init(ch_group_t *grp_ptr)
   grp_ptr->num_i2c_buses = CHIRP_NUM_I2C_BUSES;
   grp_ptr->rtc_cal_pulse_ms = 200;
 
+  Serial.begin(9600);
+  while (!Serial)
+    ;
+
   // initialize I2C bus
   Wire.setClock(400000); // setting 400KHz speed to match sensor
   Wire.begin();
@@ -67,15 +71,17 @@ void chbsp_board_init(ch_group_t *grp_ptr)
 
   // Read 2 bytes from program address 0x45
   Wire.beginTransmission(CH_I2C_ADDR_PROG);
-  Wire.write(0x0); // REGISTER 0x0 
+  Wire.write(0x0);             // REGISTER 0x0
   Wire.endTransmission(false); // PREVENTS FROM LINE BEING RELEASED
-  int nBytes = Wire.requestFrom(CH_I2C_ADDR_PROG, 2);
+  Wire.requestFrom(CH_I2C_ADDR_PROG, 2);
   byte firstByte = Wire.read();
   byte secondByte = Wire.read();
-  // NOT SURE IF THIS IS RIGHT, reading back A and FF
-  //Serial.println(nBytes);
-  Serial.println(firstByte, HEX);
-  Serial.println(secondByte, HEX);
+  if(firstByte == 0xA && secondByte == 0x2){
+    Serial.println("Chirp Sensor found");
+  } 
+  else{
+    Serial.print("No sensor found");
+  }
   Wire.endTransmission();
   // the two values should be 0x0A and 0x02 if chirp is present
 
@@ -342,7 +348,12 @@ void chbsp_delay_ms(uint32_t ms)
  *
  * This function is REQUIRED.
  */
-int chbsp_i2c_init(void);
+int chbsp_i2c_init(void){
+  Wire.setClock(400000); // setting 400KHz speed to match sensor
+  Wire.setSDA(sdaPin);
+  Wire.setSCL(sclPin);
+  return EXIT_SUCCESS;
+}
 
 /*!
  * \brief Return I2C information for a sensor port on the board.

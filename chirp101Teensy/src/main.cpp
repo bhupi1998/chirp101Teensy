@@ -10,9 +10,6 @@
 
 
 void setup() {
-  Serial.begin(9600);
-  while (!Serial)
-    ;
   // pin mode defines
   pinMode(ledPin, OUTPUT);
   pinMode(progPin, OUTPUT);
