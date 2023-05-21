@@ -30,7 +30,7 @@ void setup() {
   // 1 initializing hardware
   chbsp_board_init(chGroup1);
   // 2 initialize sonicLib structures for each sensor (only 1 for now). 
-  // ch_init(chirp1, chGroup1, 1, CHIRP_SENSOR_FW_INIT_FUNC);
+  ch_init(chirp1, chGroup1, 1, CHIRP_SENSOR_FW_INIT_FUNC);
   // 3 interrupt handler function () here. //uses ch_get_range() to read 
   // 4 program and start all sensors
   //ch_group_start(chGroup1);

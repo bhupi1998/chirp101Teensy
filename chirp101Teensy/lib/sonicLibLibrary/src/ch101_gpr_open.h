@@ -11,7 +11,7 @@
  */
 
 /*
- * Copyright © 2016-2019, Chirp Microsystems.  All rights reserved.
+ * Copyright ï¿½ 2016-2019, Chirp Microsystems.  All rights reserved.
  *
  * Chirp Microsystems CONFIDENTIAL
  *

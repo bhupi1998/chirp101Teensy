@@ -55,7 +55,6 @@ void chbsp_board_init(ch_group_t *grp_ptr)
   grp_ptr->num_ports = CHIRP_MAX_NUM_SENSORS;
   grp_ptr->num_i2c_buses = CHIRP_NUM_I2C_BUSES;
   grp_ptr->rtc_cal_pulse_ms = 200;
-
   Serial.begin(9600);
   while (!Serial)
     ;
@@ -245,7 +244,7 @@ void chbsp_group_io_set(ch_group_t *grp_ptr)
 void chbsp_group_io_interrupt_enable(ch_group_t *grp_ptr)
 {
   pinMode(initPin, INPUT_PULLDOWN);
-  attachInterrupt(digitalPinToInterrupt(initPin), intInterrupt, RISING);
+  // attachInterrupt(digitalPinToInterrupt(initPin), intInterrupt, RISING);
 }
 
 // Interrupt routine for int at pin 2
@@ -298,7 +297,9 @@ void chbsp_io_interrupt_disable(ch_dev_t *dev_ptr)
  *
  * This function is REQUIRED.
  */
-void chbsp_io_callback_set(ch_io_int_callback_t callback_func_ptr);
+void chbsp_io_callback_set(ch_io_int_callback_t callback_func_ptr){
+    attachInterrupt(digitalPinToInterrupt(initPin), intInterrupt, RISING);
+}
 
 /*!
  * \brief Delay for specified number of microseconds
@@ -349,6 +350,7 @@ void chbsp_delay_ms(uint32_t ms)
  * This function is REQUIRED.
  */
 int chbsp_i2c_init(void){
+  Wire.begin();
   Wire.setClock(400000); // setting 400KHz speed to match sensor
   Wire.setSDA(sdaPin);
   Wire.setSCL(sclPin);
@@ -381,7 +383,17 @@ int chbsp_i2c_init(void){
  *
  * This function is REQUIRED.
  */
-uint8_t chbsp_i2c_get_info(ch_group_t *grp_ptr, uint8_t dev_num, ch_i2c_info_t *info_ptr);
+uint8_t chbsp_i2c_get_info(ch_group_t *grp_ptr, uint8_t dev_num, ch_i2c_info_t *info_ptr){
+  	uint8_t ret_val = 1;
+
+		info_ptr->address = 0x1;
+		info_ptr->bus_num = 1;
+
+		info_ptr->drv_flags = 0;	// no special I2C handling by SonicLib driver is needed
+
+		ret_val = 0;
+	return ret_val;
+}
 
 /*!
  * \brief Write bytes to an I2C slave.
@@ -398,7 +410,14 @@ uint8_t chbsp_i2c_get_info(ch_group_t *grp_ptr, uint8_t dev_num, ch_i2c_info_t *
  * \note Implementations of this function should use the \a ch_get_i2c_address() function to
  * obtain the device I2C address.
  */
-int chbsp_i2c_write(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes);
+int chbsp_i2c_write(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes){
+  Wire.beginTransmission(0x1);
+  for(int i=0; i< num_bytes; i++){
+    Wire.write(data[i]);
+  }
+  Wire.endTransmission();
+  return 0;
+}
 
 /*!
  * \brief Write bytes to an I2C slave using memory addressing.
@@ -429,7 +448,15 @@ int chbsp_i2c_write(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes);
  * \note Implementations of this function should use the \a ch_get_i2c_address() function to obtain
  * the device I2C address.
  */
-int chbsp_i2c_mem_write(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uint16_t num_bytes);
+int chbsp_i2c_mem_write(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uint16_t num_bytes){
+  Wire.beginTransmission(0x1);
+  Wire.write(mem_addr);
+  for(int i = 0 ; i< num_bytes; i++){
+    Wire.write(data[i]);
+  }
+  Wire.endTransmission();
+  return EXIT_SUCCESS;
+}
 
 /*!
  * \brief Read bytes from an I2C slave.
@@ -448,7 +475,20 @@ int chbsp_i2c_mem_write(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uin
  * \note Implementations of this function should use the \a ch_get_i2c_address() function to obtain
  * the device I2C address.
  */
-int chbsp_i2c_read(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes);
+int chbsp_i2c_read(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes){
+  int i2c_error = 1;
+  int index = 0;
+  Wire.beginTransmission(0x1);
+  Wire.requestFrom(0x1,num_bytes);
+  while(Wire.available()){
+    data[index] = Wire.read();
+    index++;
+  }
+  if(i2c_error>0){
+    return EXIT_SUCCESS;
+  }
+  return EXIT_FAILURE;
+}
 
 /*!
  * \brief Read bytes from an I2C slave using memory addressing.
@@ -493,4 +533,13 @@ int chbsp_i2c_read(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes);
  * \note Implementations of this function should use the \a ch_get_i2c_address() function to obtain
  * the device I2C address.
  */
-int chbsp_i2c_mem_read(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uint16_t num_bytes);
+int chbsp_i2c_mem_read(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uint16_t num_bytes){
+  Wire.beginTransmission(0x1);
+  Wire.write(mem_addr);
+  Wire.endTransmission(false);
+  Wire.write(0x1);
+  for(int i = 0 ; i< num_bytes; i++){
+    Wire.write(data[i]);
+  }
+  return EXIT_SUCCESS;
+}
