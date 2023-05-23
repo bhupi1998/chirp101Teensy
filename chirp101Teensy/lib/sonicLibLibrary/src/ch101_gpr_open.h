@@ -37,6 +37,11 @@
 #include "soniclib.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+  #endif
+
 /* GPR firmware registers */
 #define CH101_GPR_OPEN_REG_OPMODE 			0x01
 #define CH101_GPR_OPEN_REG_TICK_INTERVAL 	0x02
@@ -68,6 +73,8 @@ uint8_t ch101_gpr_open_init(ch_dev_t *dev_ptr, ch_group_t *grp_ptr, uint8_t i2c_
 
 void ch101_gpr_open_store_pt_result(ch_dev_t *dev_ptr);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

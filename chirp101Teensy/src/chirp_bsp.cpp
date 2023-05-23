@@ -244,7 +244,22 @@ void chbsp_group_io_set(ch_group_t *grp_ptr)
 void chbsp_group_io_interrupt_enable(ch_group_t *grp_ptr)
 {
   pinMode(initPin, INPUT_PULLDOWN);
-  // attachInterrupt(digitalPinToInterrupt(initPin), intInterrupt, RISING);
+  attachInterrupt(digitalPinToInterrupt(initPin), intInterrupt, RISING);
+}
+
+/*!
+ * \brief Enable the interrupt for one sensor
+ *
+ * \param dev_ptr 		pointer to the ch_dev_t config structure for a sensor
+ *
+ * This function should enable the host interrupt associated with the Chirp sensor device's 
+ * INT line.
+ *
+ * This function is REQUIRED.
+ */
+void chbsp_io_interrupt_enable(ch_dev_t *dev_ptr){
+  pinMode(initPin, INPUT_PULLDOWN);
+  attachInterrupt(digitalPinToInterrupt(initPin), intInterrupt, RISING);
 }
 
 // Interrupt routine for int at pin 2
@@ -386,7 +401,7 @@ int chbsp_i2c_init(void){
 uint8_t chbsp_i2c_get_info(ch_group_t *grp_ptr, uint8_t dev_num, ch_i2c_info_t *info_ptr){
   	uint8_t ret_val = 1;
 
-		info_ptr->address = 0x1;
+		info_ptr->address = 0x45;
 		info_ptr->bus_num = 1;
 
 		info_ptr->drv_flags = 0;	// no special I2C handling by SonicLib driver is needed
@@ -411,7 +426,7 @@ uint8_t chbsp_i2c_get_info(ch_group_t *grp_ptr, uint8_t dev_num, ch_i2c_info_t *
  * obtain the device I2C address.
  */
 int chbsp_i2c_write(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes){
-  Wire.beginTransmission(0x1);
+  Wire.beginTransmission(0x45);
   for(int i=0; i< num_bytes; i++){
     Wire.write(data[i]);
   }
@@ -449,7 +464,7 @@ int chbsp_i2c_write(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes){
  * the device I2C address.
  */
 int chbsp_i2c_mem_write(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uint16_t num_bytes){
-  Wire.beginTransmission(0x1);
+  Wire.beginTransmission(0x45);
   Wire.write(mem_addr);
   for(int i = 0 ; i< num_bytes; i++){
     Wire.write(data[i]);
@@ -478,8 +493,8 @@ int chbsp_i2c_mem_write(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uin
 int chbsp_i2c_read(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes){
   int i2c_error = 1;
   int index = 0;
-  Wire.beginTransmission(0x1);
-  Wire.requestFrom(0x1,num_bytes);
+  Wire.beginTransmission(0x45);
+  Wire.requestFrom(0x45,num_bytes);
   while(Wire.available()){
     data[index] = Wire.read();
     index++;
@@ -534,12 +549,23 @@ int chbsp_i2c_read(ch_dev_t *dev_ptr, uint8_t *data, uint16_t num_bytes){
  * the device I2C address.
  */
 int chbsp_i2c_mem_read(ch_dev_t *dev_ptr, uint16_t mem_addr, uint8_t *data, uint16_t num_bytes){
-  Wire.beginTransmission(0x1);
+  Wire.beginTransmission(0x45);
   Wire.write(mem_addr);
   Wire.endTransmission(false);
-  Wire.write(0x1);
+  Wire.write(0x45);
   for(int i = 0 ; i< num_bytes; i++){
     Wire.write(data[i]);
   }
   return EXIT_SUCCESS;
+}
+
+/*!
+ * \brief Reset I2C bus associated with device.
+ *
+ * \param dev_ptr 		pointer to the ch_dev_t config structure for a sensor
+ *
+ * This function should perform a reset of the I2C interface for the specified device.
+ */
+void chbsp_i2c_reset(ch_dev_t *dev_ptr){
+  Wire.begin();
 }

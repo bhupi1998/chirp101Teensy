@@ -7,7 +7,7 @@
  */
 
 /*
- Copyright © 2019-2021 Chirp Microsystems.  All rights reserved.
+ Copyright ï¿½ 2019-2021 Chirp Microsystems.  All rights reserved.
 
  Chirp Microsystems CONFIDENTIAL
 
